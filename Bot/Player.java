@@ -7,14 +7,14 @@ import java.util.Random;
 
 public class Player {
 	static BufferedWriter fileOut = null;
-	
+
 	/*
 		GAME DATA
 	*/
 	public static int universeWidth;
 	public static int universeHeight;
 	public static String myColor;
-	
+
 	public static String[] bluePlanets;
 	public static String[] cyanPlanets;
 	public static String[] greenPlanets;
@@ -26,6 +26,9 @@ public class Player {
 	public static String[] greenFleets;
 	public static String[] yellowFleets;
 
+
+	public static int numEnemyPlanets;
+	public static int numFriendlyPlanets;
 
 	public static void main(String[] args) throws Exception {
 
@@ -62,32 +65,32 @@ public class Player {
 
 				/*
 					- get my planets based on my color
-					- select a random other color as the target player 
+					- select a random other color as the target player
 				*/
 				if (myColor.equals("blue")) {
 					myPlanets = bluePlanets;
 					String[] potentialTargets = {"cyan", "green", "yellow", "neutral"};
 					targetPlayer = potentialTargets[rand.nextInt(4)];
-				} 
+				}
 
 				if (myColor.equals("cyan")) {
 					myPlanets = cyanPlanets;
 					String[] potentialTargets = {"blue", "green", "yellow", "neutral"};
 					targetPlayer = potentialTargets[rand.nextInt(4)];
-				} 
+				}
 
 				if (myColor.equals("green")) {
 					myPlanets = greenPlanets;
 					String[] potentialTargets = {"cyan", "blue", "yellow", "neutral"};
 					targetPlayer = potentialTargets[rand.nextInt(4)];
-				} 
-				
+				}
+
 				if (myColor.equals("yellow")) {
 					myPlanets = yellowPlanets;
 					String[] potentialTargets = {"cyan", "green", "blue", "neutral"};
 					targetPlayer = potentialTargets[rand.nextInt(4)];
 				}
-
+				numFriendlyPlanets = myPlanets.length;
 				/*
 					- based on the color selected as the target,
 					find the planets of the targeted player
@@ -112,14 +115,15 @@ public class Player {
 				if (targetPlayer.equals("neutral")) {
 					targetPlayerPlanets = neutralPlanets;
 				}
+				numEnemyPlanets = targetPlayerPlanets.length;
 				/*
 					- if the target player has any planets
-					and if i have any planets (we could only have 
-					fleets) attack a random planet of the target 
+					and if i have any planets (we could only have
+					fleets) attack a random planet of the target
 					from each of my planets
 				*/
-				if (targetPlayerPlanets.length > 0 && myPlanets.length > 0) {
-					for (int i = 0 ; i < myPlanets.length ; i++) {
+				if (numEnemyPlanets > 0 && numFriendlyPlanets > 0) {
+					for (int i = 0 ; i < numFriendlyPlanets ; i++) {
 						String myPlanet = myPlanets[i];
 						int randomEnemyIndex = rand.nextInt(targetPlayerPlanets.length);
 						String randomTargetPlanet = targetPlayerPlanets[randomEnemyIndex];
@@ -131,7 +135,7 @@ public class Player {
 						System.out.println("A " + myPlanet + " " + randomTargetPlanet);
 					}
 				}
-				
+
 				/*
 					- send a hello message to your teammate bot :)
 					- it will recieve it form the game next turn (if the bot parses it)
@@ -139,7 +143,7 @@ public class Player {
 				System.out.println("M Hello");
 
 				/*
-				  	- E will end my turn. 
+				  	- E will end my turn.
 				  	- you should end each turn (if you don't the game will think you timed-out)
 				  	- after E you should send no more commands to the game
 				 */
@@ -151,13 +155,13 @@ public class Player {
 			e.printStackTrace();
 		}
 		fileOut.close();
-		
+
 	}
 
 
 	/**
-	 * This function should be used instead of System.out.print for 
-	 * debugging, since the System.out.println is used to send 
+	 * This function should be used instead of System.out.print for
+	 * debugging, since the System.out.println is used to send
 	 * commands to the game
 	 * @param line String you want to log into the log file.
 	 * @throws IOException
@@ -190,13 +194,13 @@ public class Player {
 	 */
 	public static void getGameState() throws NumberFormatException, IOException {
 		BufferedReader stdin = new BufferedReader(
-			new java.io.InputStreamReader(System.in)
-		); 
+				new java.io.InputStreamReader(System.in)
+		);
 		/*
 			- this is where we will store the data recieved from the game,
-			- Since we don't know how many planets/fleets each player will 
+			- Since we don't know how many planets/fleets each player will
 			have, we are using lists.
-		*/ 
+		*/
 		LinkedList<String> bluePlanetsList = new LinkedList<>();
 		LinkedList<String> cyanPlanetsList = new LinkedList<>();
 		LinkedList<String> greenPlanetsList = new LinkedList<>();
@@ -208,70 +212,87 @@ public class Player {
 		LinkedList<String> greenFleetsList = new LinkedList<>();
 		LinkedList<String> yellowFleetsList = new LinkedList<>();
 
-		
+
 		/*
 			********************************
 			read the input from the game and
 			parse it (get data from the game)
 			********************************
 			- game is telling us about the state of the game (who ows planets
-			and what fleets/attacks are on their way). 
-			- The game will give us data line by line. 
+			and what fleets/attacks are on their way).
+			- The game will give us data line by line.
 			- When the game only gives us "S", this is a sign
 			that it is our turn and we can start calculating out turn.
-			- NOTE: some things like parsing of fleets(attacks) is not implemented 
+			- NOTE: some things like parsing of fleets(attacks) is not implemented
 			and you should do it yourself
 		*/
 		String line = "";
 		/*
 			Loop until the game signals to start playing the turn with "S"
-		*/ 
+		*/
 		while (!(line = stdin.readLine()).equals("S")) {
-			/* 
-				- save the data we recieve to the log file, so you can see what 
+			/*
+				- save the data we recieve to the log file, so you can see what
 				data is recieved form the game (for debugging)
-			*/ 
-			logToFile(line); 
-			
+			*/
+			logToFile(line);
+
 			String[] tokens = line.split(" ");
 			char firstLetter = line.charAt(0);
 			/*
-			 	U <int> <int> <string> 						
+			 	U <int> <int> <string>
 				- Universe: Size (x, y) of playing field, and your color
 			*/
 			if (firstLetter == 'U') {
 				universeWidth = Integer.parseInt(tokens[1]);
 				universeHeight = Integer.parseInt(tokens[2]);
 				myColor = tokens[3];
-			} 
+			}
 			/*
-				P <int> <int> <int> <float> <int> <string> 	
-				- Planet: Name (number), position x, position y, 
+				P <int> <int> <int> <float> <int> <string>
+				- Planet: Name (number), position x, position y,
 				planet size, army size, planet color (blue, cyan, green, yellow or null for neutral)
 			*/
 			if (firstLetter == 'P') {
 				String plantetName = tokens[1];
 				if (tokens[6].equals("blue")) {
 					bluePlanetsList.add(plantetName);
-				} 
+				}
 				if (tokens[6].equals("cyan")) {
 					cyanPlanetsList.add(plantetName);
-				} 
+				}
 				if (tokens[6].equals("green")) {
 					greenPlanetsList.add(plantetName);
-				} 
+				}
 				if (tokens[6].equals("yellow")) {
 					yellowPlanetsList.add(plantetName);
-				} 
+				}
 				if (tokens[6].equals("null")) {
 					neutralPlanetsList.add(plantetName);
-				} 
-			} 
+				}
+			}
+
+			//Fleet:
+			//- fleet name (number),
+			//- fleet size
+			//- origin planet
+			//- destination planet
+			//- current turn
+			//- number of needed turns
+			//- planet color (owner - may be null for neutral)
+			/*if (firstLetter == 'F') {
+				String fleetName = tokens[1];
+			}*/
 		}
 		/*
 			- override data from previous turn
 			- convert the lists into fixed size arrays
-		*/ 
+		*/
+
+
+
+
+
 		bluePlanets = bluePlanetsList.toArray(new String[0]);
 		cyanPlanets = cyanPlanetsList.toArray(new String[0]);
 		greenPlanets = greenPlanetsList.toArray(new String[0]);
