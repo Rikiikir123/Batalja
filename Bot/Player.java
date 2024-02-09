@@ -21,6 +21,7 @@ class Planet{
 		this.y = y;
 		this.army = army;
 		this.size = size;
+		this.isBeingAttacked = false;
 	}
 }
 
@@ -221,6 +222,12 @@ public class Player {
 			- Since we don't know how many planets/fleets each player will
 			have, we are using lists.
 		*/
+		//reset all my planets attributes for beingattacked after each turn
+		for (Planet planet : myPlanets) {
+			planet.isBeingAttacked = false;
+		}
+
+
 		LinkedList<String> bluePlanetsList = new LinkedList<>();
 		LinkedList<String> cyanPlanetsList = new LinkedList<>();
 		LinkedList<String> greenPlanetsList = new LinkedList<>();
@@ -318,6 +325,16 @@ public class Player {
             	int remainingTurns = Integer.parseInt(tokens[4]);
             	int travelTurns = Integer.parseInt(tokens[5]);
             	String fleetPlayerColor = tokens[6];
+
+				//if a different colored planet is sending a fleet, check if its sent to one of my planets and set that planets attacked to true
+				if (fleetPlayerColor != myColor){
+					for (Planet planet : myPlanets) {
+						if (planet.name.equals(fleetDestination)) {
+							planet.isBeingAttacked = true;
+							break;
+						}
+					}
+				}
 			}
 		}
 		/*
