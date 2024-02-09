@@ -5,6 +5,25 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Random;
 
+class Planet{
+	String name;
+	String color;
+	int army;
+	int x, y;
+	float size;
+	boolean isBeingAttacked;
+	Planet closestFriendlyPlanet;
+	Planet closestEnemyPlanet;
+	Planet(String name, int army, int x, int y, String color, float size){
+		this.name = name;
+		this.color = color;
+		this.x = x;
+		this.y = y;
+		this.army = army;
+		this.size = size;
+	}
+}
+
 public class Player {
 	static BufferedWriter fileOut = null;
 
@@ -26,7 +45,8 @@ public class Player {
 	public static String[] greenFleets;
 	public static String[] yellowFleets;
 
-
+	//
+	public static Planet[] myPlanets;
 	public static int numEnemyPlanets;
 	public static int numFriendlyPlanets;
 
@@ -212,6 +232,7 @@ public class Player {
 		LinkedList<String> greenFleetsList = new LinkedList<>();
 		LinkedList<String> yellowFleetsList = new LinkedList<>();
 
+		LinkedList<Planet> myPlanetsList = new LinkedList<>();
 
 		/*
 			********************************
@@ -255,6 +276,11 @@ public class Player {
 			*/
 			if (firstLetter == 'P') {
 				String plantetName = tokens[1];
+				int x = Integer.parseInt(tokens[2]);
+				int y = Integer.parseInt(tokens[3]);
+				float size = Float.parseFloat(tokens[4]);
+				int army = Integer.parseInt(tokens[5]);
+				String color = tokens[6];
 				if (tokens[6].equals("blue")) {
 					bluePlanetsList.add(plantetName);
 				}
@@ -270,6 +296,11 @@ public class Player {
 				if (tokens[6].equals("null")) {
 					neutralPlanetsList.add(plantetName);
 				}
+
+				if (myColor == color){
+					Planet planet = new Planet(plantetName,army,x,y,color,size);
+					myPlanetsList.add(planet);
+				}
 			}
 
 			//Fleet:
@@ -280,9 +311,14 @@ public class Player {
 			//- current turn
 			//- number of needed turns
 			//- planet color (owner - may be null for neutral)
-			/*if (firstLetter == 'F') {
-				String fleetName = tokens[1];
-			}*/
+			if (firstLetter == 'F') {
+				String fleetSource = tokens[1];
+            	String fleetDestination = tokens[2];
+            	int totalShips = Integer.parseInt(tokens[3]);
+            	int remainingTurns = Integer.parseInt(tokens[4]);
+            	int travelTurns = Integer.parseInt(tokens[5]);
+            	String fleetPlayerColor = tokens[6];
+			}
 		}
 		/*
 			- override data from previous turn
@@ -302,5 +338,7 @@ public class Player {
 		cyanFleets = cyanFleetsList.toArray(new String[0]);
 		greenFleets = greenFleetsList.toArray(new String[0]);
 		yellowFleets = yellowFleetsList.toArray(new String[0]);
+
+		myPlanets = myPlanetsList.toArray(new Planet[0]);
 	}
 }
