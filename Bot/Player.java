@@ -330,7 +330,16 @@ public class Player {
 				if (fleetPlayerColor != myColor){
 					for (Planet planet : myPlanets) {
 						if (planet.name.equals(fleetDestination)) {
-							planet.isBeingAttacked = true;
+							planet.isBeingAttacked = true; //then planet is being attacked
+							break;
+						}
+					}
+				}
+				else{
+					//check if the fleet is no longer targeting one of my planets
+					for (Planet planet : myPlanets) {
+						if (planet.name.equals(fleetDestination)) {
+							planet.isBeingAttacked = false; //then planet is no longer being attacked
 							break;
 						}
 					}
