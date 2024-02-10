@@ -48,6 +48,7 @@ public class Player {
 
 	//
 	public static Planet[] myPlanets;
+	public static Planet[] nullPlanets; //not the same as the neutral planets array lol
 	public static int numEnemyPlanets;
 	public static int numFriendlyPlanets;
 
@@ -228,6 +229,7 @@ public class Player {
 		if (myPlanets != null){
 			for (Planet planet : myPlanets) {
 				planet.isBeingAttacked = false;
+				planet.closestFriendlyPlanet = null;
 			}
 		}
 
@@ -245,6 +247,7 @@ public class Player {
 		LinkedList<String> yellowFleetsList = new LinkedList<>();
 
 		LinkedList<Planet> myPlanetsList = new LinkedList<>();
+		LinkedList<Planet> nullPlanetsList = new LinkedList<>();
 
 		/*
 			********************************
@@ -308,10 +311,15 @@ public class Player {
 				if (tokens[6].equals("null")) {
 					neutralPlanetsList.add(plantetName);
 				}
-
+				//if planet belongs to me then add it to myPlanets array
 				if (myColor == color){
 					Planet planet = new Planet(plantetName,army,x,y,color,size);
 					myPlanetsList.add(planet);
+				}
+				//if planet is neutral add it to neutral planets array
+				if(color.equals("null")){
+					Planet planet = new Planet(plantetName,army,x,y,color,size);
+					nullPlanetsList.add(planet);
 				}
 			}
 
@@ -356,6 +364,23 @@ public class Player {
 			- convert the lists into fixed size arrays
 		*/
 
+		//find and set a closest friendly planet on each of my planets
+		if (myPlanets != null){
+			double closesetDistance = Double.MAX_VALUE;
+			double distance;
+			for (Planet myPlanet1 : myPlanets){
+				for (Planet myPlanet2 : myPlanets){
+					if (!myPlanet1.name.equals(myPlanet2.name)){
+						distance = calculateDistance(myPlanet1,myPlanet2);
+						if (distance < closesetDistance){
+							myPlanet1.closestFriendlyPlanet = myPlanet2;
+							closesetDistance = distance;
+						}
+					}
+				}
+			}
+		}
+
 
 
 
@@ -371,5 +396,11 @@ public class Player {
 		yellowFleets = yellowFleetsList.toArray(new String[0]);
 
 		myPlanets = myPlanetsList.toArray(new Planet[0]);
+		nullPlanets = nullPlanetsList.toArray(new Planet[0]);
+	}
+	public static double calculateDistance(Planet planet1, Planet planet2) {
+		int deltaX = planet1.x - planet2.x;
+		int deltaY = planet1.y - planet2.y;
+		return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 	}
 }
