@@ -49,6 +49,7 @@ public class Player {
 	//
 	public static Planet[] myPlanets;
 	public static Planet[] nullPlanets; //not the same as the neutral planets array lol
+	public static Planet[] enemyPlanets;
 	public static int numEnemyPlanets;
 	public static int numFriendlyPlanets;
 
@@ -230,6 +231,7 @@ public class Player {
 			for (Planet planet : myPlanets) {
 				planet.isBeingAttacked = false;
 				planet.closestFriendlyPlanet = null;
+				planet.closestEnemyPlanet = null;
 			}
 		}
 
@@ -248,6 +250,7 @@ public class Player {
 
 		LinkedList<Planet> myPlanetsList = new LinkedList<>();
 		LinkedList<Planet> nullPlanetsList = new LinkedList<>();
+		LinkedList<Planet> enemyPlanetsList = new LinkedList<>();
 
 		/*
 			********************************
@@ -312,7 +315,7 @@ public class Player {
 					neutralPlanetsList.add(plantetName);
 				}
 				//if planet belongs to me then add it to myPlanets array
-				if (myColor == color){
+				if (myColor.equals(color)){
 					Planet planet = new Planet(plantetName,army,x,y,color,size);
 					myPlanetsList.add(planet);
 				}
@@ -320,6 +323,11 @@ public class Player {
 				if(color.equals("null")){
 					Planet planet = new Planet(plantetName,army,x,y,color,size);
 					nullPlanetsList.add(planet);
+				}
+				//if planet is another color then add it to enemyplanets list
+				if(!color.equals("null") && !color.equals(myColor)){
+					Planet planet = new Planet(plantetName,army,x,y,color,size);
+					enemyPlanetsList.add(planet);
 				}
 			}
 
@@ -380,7 +388,22 @@ public class Player {
 				}
 			}
 		}
-
+		
+		
+		//find and set a closest enemy planet on each of my planets
+		if (myPlanets != null && enemyPlanets != null){
+			double closesetDistance = Double.MAX_VALUE;
+			double distance;
+			for (Planet myPlanet : myPlanets){
+				for (Planet enemyPlanet : enemyPlanets){
+						distance = calculateDistance(myPlanet,enemyPlanet);
+						if (distance < closesetDistance){
+							myPlanet.closestEnemyPlanet = enemyPlanet;
+							closesetDistance = distance;
+						}
+				}
+			}
+		}
 
 
 
@@ -397,6 +420,7 @@ public class Player {
 
 		myPlanets = myPlanetsList.toArray(new Planet[0]);
 		nullPlanets = nullPlanetsList.toArray(new Planet[0]);
+		enemyPlanets = enemyPlanetsList.toArray(new Planet[0]);
 	}
 	public static double calculateDistance(Planet planet1, Planet planet2) {
 		int deltaX = planet1.x - planet2.x;
