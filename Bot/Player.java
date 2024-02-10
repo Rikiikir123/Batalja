@@ -222,10 +222,15 @@ public class Player {
 			- Since we don't know how many planets/fleets each player will
 			have, we are using lists.
 		*/
+
+
 		//reset all my planets attributes for beingattacked after each turn
-		for (Planet planet : myPlanets) {
-			planet.isBeingAttacked = false;
+		if (myPlanets != null){
+			for (Planet planet : myPlanets) {
+				planet.isBeingAttacked = false;
+			}
 		}
+
 
 
 		LinkedList<String> bluePlanetsList = new LinkedList<>();
@@ -320,11 +325,11 @@ public class Player {
 			//- planet color (owner - may be null for neutral)
 			if (firstLetter == 'F') {
 				String fleetSource = tokens[1];
-            	String fleetDestination = tokens[2];
-            	int totalShips = Integer.parseInt(tokens[3]);
-            	int remainingTurns = Integer.parseInt(tokens[4]);
-            	int travelTurns = Integer.parseInt(tokens[5]);
-            	String fleetPlayerColor = tokens[6];
+				String fleetDestination = tokens[2];
+				int totalShips = Integer.parseInt(tokens[3]);
+				int remainingTurns = Integer.parseInt(tokens[4]);
+				int travelTurns = Integer.parseInt(tokens[5]);
+				String fleetPlayerColor = tokens[6];
 
 				//if a different colored planet is sending a fleet, check if its sent to one of my planets and set that planets attacked to true
 				if (fleetPlayerColor != myColor){
