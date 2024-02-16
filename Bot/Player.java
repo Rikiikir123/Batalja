@@ -106,42 +106,41 @@ public class Player {
 					*********************************
 					- current plan: attack randomly
 				*/
-
-				String[] myPlanets = new String[0];
+				//////////////////////
+				/*String[] myPlanetsArr = new String[0];
 				String targetPlayer = "";
 
-				/*
+				*//*
 					- get my planets based on my color
 					- select a random other color as the target player
-				*/
+				*//*
 				if (myColor.equals("blue")) {
-					myPlanets = bluePlanets;
+					myPlanetsArr = bluePlanets;
 					String[] potentialTargets = {"cyan", "green", "yellow", "neutral"};
 					targetPlayer = potentialTargets[rand.nextInt(4)];
 				}
 
 				if (myColor.equals("cyan")) {
-					myPlanets = cyanPlanets;
+					myPlanetsArr = cyanPlanets;
 					String[] potentialTargets = {"blue", "green", "yellow", "neutral"};
 					targetPlayer = potentialTargets[rand.nextInt(4)];
 				}
 
 				if (myColor.equals("green")) {
-					myPlanets = greenPlanets;
+					myPlanetsArr = greenPlanets;
 					String[] potentialTargets = {"cyan", "blue", "yellow", "neutral"};
 					targetPlayer = potentialTargets[rand.nextInt(4)];
 				}
 
 				if (myColor.equals("yellow")) {
-					myPlanets = yellowPlanets;
+					myPlanetsArr = yellowPlanets;
 					String[] potentialTargets = {"cyan", "green", "blue", "neutral"};
 					targetPlayer = potentialTargets[rand.nextInt(4)];
 				}
-				numFriendlyPlanets = myPlanets.length;
-				/*
+				*//*
 					- based on the color selected as the target,
 					find the planets of the targeted player
-				*/
+				*//*
 				String[] targetPlayerPlanets = new String[0];
 				if (targetPlayer.equals("blue")) {
 					targetPlayerPlanets = bluePlanets;
@@ -163,32 +162,120 @@ public class Player {
 					targetPlayerPlanets = neutralPlanets;
 				}
 				numEnemyPlanets = targetPlayerPlanets.length;
-				/*
+				*//*
 					- if the target player has any planets
 					and if i have any planets (we could only have
 					fleets) attack a random planet of the target
 					from each of my planets
-				*/
+				*//*
 				if (numEnemyPlanets > 0 && numFriendlyPlanets > 0) {
 					for (int i = 0 ; i < numFriendlyPlanets ; i++) {
-						String myPlanet = myPlanets[i];
+						String myPlanet = myPlanetsArr[i];
 						int randomEnemyIndex = rand.nextInt(targetPlayerPlanets.length);
 						String randomTargetPlanet = targetPlayerPlanets[randomEnemyIndex];
-						/*
+						*//*
 							- printing the attack will tell the game to attack
 							- be carefull to only use System.out.println for printing game commands
 							- for debugging you can use logToFile() method
-						*/
+						*//*
 						System.out.println("A " + myPlanet + " " + randomTargetPlanet);
 					}
+				}*/
+				//////////////////
+
+
+
+
+				//from decision tree
+				boolean attack = false;
+				boolean defend = false;
+				if (numEnemyPlanets > 0 && numFriendlyPlanets > 0){
+					if (largestReinforcement < 67.5){
+						if(totalTroopsGenerated < 8968.5){
+							if (fleetReinforced < 251.5){
+							  	defend = true;
+							}
+							else{
+								if (turnsPlayed < 246){
+									if (totalTroopsGenerated < 1786.5){
+										defend = true;
+									}
+									else{
+										if (turnsPlayed < 218){
+											attack = true;
+										}
+										else {
+											if (turnsPlayed > 241.5){
+												defend = true;
+											}
+											else {
+												attack = true;
+											}
+										}
+									}
+								}
+								else {
+									defend = true;
+								}
+							}
+						}
+						else{
+							if (turnsPlayed < 489.5){
+								attack = true;
+							}
+							else{
+								defend = true;
+							}
+						}
+					}
+					else {
+						if (largestAttack < 66.5){
+							defend = true;
+						}
+						else {
+							if (largestReinforcement < 154.5){
+								if (turnsPlayed < 371.5){
+									attack = true;
+								}
+								else{
+									defend = true;
+								}
+							}
+							else{
+								if (largestAttack < 220.5){
+									if (fleetReinforced < 8737.5){
+										if (turnsPlayed < 553){
+											attack = true;
+										}
+										else {
+											defend = true;
+										}
+									}
+									else{
+										defend = true;
+									}
+								}
+								else{
+									attack = true;
+								}
+							}
+						}
+					}
+
+
+					if (attack == true){
+						for (Planet planet : myPlanets){
+							String targetName = planet.closestEnemyPlanet.name;
+							System.out.println("A " + planet.name + " " + targetName);
+						}
+					}
+					if (defend == true){
+						for (Planet planet : myPlanets){
+							String targetName = planet.closestFriendlyPlanet.name;
+							System.out.println("A " + planet.name + " " + targetName);
+						}
+					}
 				}
-
-				/*
-					- send a hello message to your teammate bot :)
-					- it will recieve it form the game next turn (if the bot parses it)
-				 */
-				System.out.println("M Hello");
-
 				/*
 				  	- E will end my turn.
 				  	- you should end each turn (if you don't the game will think you timed-out)
@@ -370,7 +457,7 @@ public class Player {
 				String fleetDestination = tokens[4];
 				int travelTurns = Integer.parseInt(tokens[6]);
 				String fleetPlayerColor = tokens[7];
-
+				boolean friendDest = false;
 				//if a different colored planet is sending a fleet, check if its sent to one of my planets and set that planets attacked to true
 				if (!fleetPlayerColor.equals(myColor)){
 					for (Planet planet : myPlanets) {
@@ -399,6 +486,7 @@ public class Player {
 					if (myPlanets != null){
 						for (Planet planet : myPlanets) {
 							if (planet.name == fleetDestination) {
+								friendDest = true;
 								fleetReinforced += fleetSize;
 								numFleetReinforced++;
 								if (fleetSize > largestReinforcement) {
@@ -406,6 +494,12 @@ public class Player {
 								}
 							}
 						}
+					}
+				}
+				if (fleetPlayerColor.equals(myColor) && friendDest == false){
+					int atk = fleetSize;
+					if (largestAttack < atk){
+						largestAttack = atk;
 					}
 				}
 			}
@@ -464,6 +558,7 @@ public class Player {
 		myPlanets = myPlanetsList.toArray(new Planet[0]);
 		nullPlanets = nullPlanetsList.toArray(new Planet[0]);
 		enemyPlanets = enemyPlanetsList.toArray(new Planet[0]);
+		numFriendlyPlanets = myPlanets.length;
 	}
 	public static double calculateDistance(Planet planet1, Planet planet2) {
 		int deltaX = planet1.x - planet2.x;
