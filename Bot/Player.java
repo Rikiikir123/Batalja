@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -14,6 +15,9 @@ class Planet{
 	boolean isBeingAttacked;
 	Planet closestFriendlyPlanet;
 	Planet closestEnemyPlanet;
+	int totalTroops = army;
+	int armyBefore= army;
+	int diff = 0;
 	Planet(String name, int army, int x, int y, String color, float size){
 		this.name = name;
 		this.color = color;
@@ -22,6 +26,14 @@ class Planet{
 		this.army = army;
 		this.size = size;
 		this.isBeingAttacked = false;
+	}
+	public void troopsCount(){
+		this.diff = 0;
+		if (this.army > this.armyBefore){
+			diff = this.army - this.armyBefore;
+			totalTroops += diff;
+			this.armyBefore = this.army;
+		}
 	}
 }
 
@@ -52,6 +64,16 @@ public class Player {
 	public static Planet[] enemyPlanets;
 	public static int numEnemyPlanets;
 	public static int numFriendlyPlanets;
+	public static HashMap<Integer, Integer> myFleets = new HashMap<>(); //<Name, Size>
+	//attributes from dataset
+	public static int turnsPlayed = 0;
+	public static int largestReinforcement = 0;
+	public static int totalTroopsGenerated = 0;
+	public static int fleetReinforced = 0;
+	public static int fleetGenerated = 0;
+	public static int numFleetGenerated = 0;
+	public static int numFleetReinforced = 0;
+	public static int largestAttack = 0;
 
 	public static void main(String[] args) throws Exception {
 
@@ -67,6 +89,8 @@ public class Player {
 			  	- we will be stopped if we die/win or if we crash
 			*/
 			while (true) {
+				updateTroops();
+				turnsPlayed++;
 				/*
 					- at the start of turn we first recieve data
 					about the universe from the game.
@@ -340,15 +364,15 @@ public class Player {
 			//- number of needed turns
 			//- planet color (owner - may be null for neutral)
 			if (firstLetter == 'F') {
-				String fleetSource = tokens[1];
-				String fleetDestination = tokens[2];
-				int totalShips = Integer.parseInt(tokens[3]);
-				int remainingTurns = Integer.parseInt(tokens[4]);
-				int travelTurns = Integer.parseInt(tokens[5]);
-				String fleetPlayerColor = tokens[6];
+				int fleetName = Integer.parseInt(tokens[1]);
+				int fleetSize = Integer.parseInt(tokens[2]);
+				String fleetSource = tokens[3];
+				String fleetDestination = tokens[4];
+				int travelTurns = Integer.parseInt(tokens[6]);
+				String fleetPlayerColor = tokens[7];
 
 				//if a different colored planet is sending a fleet, check if its sent to one of my planets and set that planets attacked to true
-				if (fleetPlayerColor != myColor){
+				if (!fleetPlayerColor.equals(myColor)){
 					for (Planet planet : myPlanets) {
 						if (planet.name.equals(fleetDestination)) {
 							planet.isBeingAttacked = true; //then planet is being attacked
@@ -358,10 +382,29 @@ public class Player {
 				}
 				else{
 					//check if the fleet is no longer targeting one of my planets
-					for (Planet planet : myPlanets) {
-						if (planet.name.equals(fleetDestination)) {
-							planet.isBeingAttacked = false; //then planet is no longer being attacked
-							break;
+					if (myPlanets != null){
+						for (Planet planet : myPlanets) {
+							if (planet.name.equals(fleetDestination)) {
+								planet.isBeingAttacked = false; //then planet is no longer being attacked
+								break;
+							}
+						}
+					}
+				}
+				//if its my fleet add it to my fleets
+				if (fleetPlayerColor.equals(myColor) && !myFleets.containsKey(fleetName)){
+					myFleets.put(fleetName,fleetSize);
+					fleetGenerated += fleetSize;
+					numFleetGenerated++;
+					if (myPlanets != null){
+						for (Planet planet : myPlanets) {
+							if (planet.name == fleetDestination) {
+								fleetReinforced += fleetSize;
+								numFleetReinforced++;
+								if (fleetSize > largestReinforcement) {
+									largestReinforcement = fleetSize;
+								}
+							}
 						}
 					}
 				}
@@ -388,8 +431,8 @@ public class Player {
 				}
 			}
 		}
-		
-		
+
+
 		//find and set a closest enemy planet on each of my planets
 		if (myPlanets != null && enemyPlanets != null){
 			double closesetDistance = Double.MAX_VALUE;
@@ -426,5 +469,13 @@ public class Player {
 		int deltaX = planet1.x - planet2.x;
 		int deltaY = planet1.y - planet2.y;
 		return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+	}
+	public static void updateTroops(){
+		if (myPlanets != null){
+			for (Planet planet : myPlanets){
+				planet.troopsCount();
+				totalTroopsGenerated += planet.diff;
+			}
+		}
 	}
 }
