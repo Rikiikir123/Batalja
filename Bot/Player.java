@@ -6,43 +6,30 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
 
-class Planet{
+class Planet {
 	String name;
 	String color;
 	int army;
 	int x, y;
 	float size;
-	boolean isBeingAttacked;
-	Planet closestFriendlyPlanet;
 	Planet closestEnemyPlanet;
-	int totalTroops = army;
-	int armyBefore= army;
-	int diff = 0;
-	Planet(String name, int army, int x, int y, String color, float size){
+	Planet closestNeutral;
+	Planet closestFriend;
+
+	Planet(String name, int army, int x, int y, String color, float size) {
 		this.name = name;
 		this.color = color;
 		this.x = x;
 		this.y = y;
 		this.army = army;
 		this.size = size;
-		this.isBeingAttacked = false;
-	}
-	public void troopsCount(){
-		this.diff = 0;
-		if (this.army > this.armyBefore){
-			diff = this.army - this.armyBefore;
-			totalTroops += diff;
-			this.armyBefore = this.army;
-		}
 	}
 }
 
 public class Player {
 	static BufferedWriter fileOut = null;
 
-	/*
-		GAME DATA
-	*/
+	// GAME DATA
 	public static int universeWidth;
 	public static int universeHeight;
 	public static String myColor;
@@ -51,7 +38,7 @@ public class Player {
 	public static String[] cyanPlanets;
 	public static String[] greenPlanets;
 	public static String[] yellowPlanets;
-	public static String[] neutralPlanets;
+/*	public static String[] neutralPlanets;*/
 
 	public static String[] blueFleets;
 	public static String[] cyanFleets;
@@ -59,228 +46,121 @@ public class Player {
 	public static String[] yellowFleets;
 
 	//
+	public static Planet[] allPlanets;
 	public static Planet[] myPlanets;
-	public static Planet[] nullPlanets; //not the same as the neutral planets array lol
 	public static Planet[] enemyPlanets;
-	public static int numEnemyPlanets;
-	public static int numFriendlyPlanets;
+	public static Planet[] neutralPlanets;
 	public static HashMap<Integer, Integer> myFleets = new HashMap<>(); //<Name, Size>
-	//attributes from dataset
+	// attributes from dataset
 	public static int turnsPlayed = 0;
-	public static int largestReinforcement = 0;
-	public static int totalTroopsGenerated = 0;
-	public static int fleetReinforced = 0;
 	public static int fleetGenerated = 0;
 	public static int numFleetGenerated = 0;
 	public static int numFleetReinforced = 0;
 	public static int largestAttack = 0;
+	public static int fleetReinforced = 0;
+	public static int largestReinforcement = 0;// not correct value
 
 	public static void main(String[] args) throws Exception {
 
 		try {
-			Random rand = new Random(); // source of random for random moves
-
-			/*
-				**************
-				Main game loop
-				**************
-			  	- each iteration of the loop is one turn.
-			  	- this will loop until we stop playing the game
-			  	- we will be stopped if we die/win or if we crash
-			*/
+			Random rand = new Random();
 			while (true) {
-				updateTroops();
 				turnsPlayed++;
-				/*
-					- at the start of turn we first recieve data
-					about the universe from the game.
-					- data will be loaded into the static variables of
-					this class
-				*/
 				getGameState();
 
-				/*
-				 	*********************************
-					LOGIC: figure out what to do with
-					your turn
-					*********************************
-					- current plan: attack randomly
-				*/
-				//////////////////////
-				/*String[] myPlanetsArr = new String[0];
-				String targetPlayer = "";
+				//find and set a closest on each of my planets
+				findClosestEnemy();
+				findClosestNeutral();
+				findClosestFriend();
 
-				*//*
-					- get my planets based on my color
-					- select a random other color as the target player
-				*//*
-				if (myColor.equals("blue")) {
-					myPlanetsArr = bluePlanets;
-					String[] potentialTargets = {"cyan", "green", "yellow", "neutral"};
-					targetPlayer = potentialTargets[rand.nextInt(4)];
+				//first 30 turns attack closest neutrals
+				if (turnsPlayed <= 75){
+					attackClosestNeutral(rand);
 				}
 
-				if (myColor.equals("cyan")) {
-					myPlanetsArr = cyanPlanets;
-					String[] potentialTargets = {"blue", "green", "yellow", "neutral"};
-					targetPlayer = potentialTargets[rand.nextInt(4)];
-				}
-
-				if (myColor.equals("green")) {
-					myPlanetsArr = greenPlanets;
-					String[] potentialTargets = {"cyan", "blue", "yellow", "neutral"};
-					targetPlayer = potentialTargets[rand.nextInt(4)];
-				}
-
-				if (myColor.equals("yellow")) {
-					myPlanetsArr = yellowPlanets;
-					String[] potentialTargets = {"cyan", "green", "blue", "neutral"};
-					targetPlayer = potentialTargets[rand.nextInt(4)];
-				}
-				*//*
-					- based on the color selected as the target,
-					find the planets of the targeted player
-				*//*
-				String[] targetPlayerPlanets = new String[0];
-				if (targetPlayer.equals("blue")) {
-					targetPlayerPlanets = bluePlanets;
-				}
-
-				if (targetPlayer.equals("cyan")) {
-					targetPlayerPlanets = cyanPlanets;
-				}
-
-				if (targetPlayer.equals("green")) {
-					targetPlayerPlanets = greenPlanets;
-				}
-
-				if (targetPlayer.equals("yellow")) {
-					targetPlayerPlanets = yellowPlanets;
-				}
-
-				if (targetPlayer.equals("neutral")) {
-					targetPlayerPlanets = neutralPlanets;
-				}
-				numEnemyPlanets = targetPlayerPlanets.length;
-				*//*
-					- if the target player has any planets
-					and if i have any planets (we could only have
-					fleets) attack a random planet of the target
-					from each of my planets
-				*//*
-				if (numEnemyPlanets > 0 && numFriendlyPlanets > 0) {
-					for (int i = 0 ; i < numFriendlyPlanets ; i++) {
-						String myPlanet = myPlanetsArr[i];
-						int randomEnemyIndex = rand.nextInt(targetPlayerPlanets.length);
-						String randomTargetPlanet = targetPlayerPlanets[randomEnemyIndex];
-						*//*
-							- printing the attack will tell the game to attack
-							- be carefull to only use System.out.println for printing game commands
-							- for debugging you can use logToFile() method
-						*//*
-						System.out.println("A " + myPlanet + " " + randomTargetPlanet);
-					}
-				}*/
-				//////////////////
 
 
-
-
-				//from decision tree
-				boolean attack = false;
-				boolean defend = false;
-				if (numEnemyPlanets > 0 && numFriendlyPlanets > 0){
-					if (largestReinforcement < 67.5){
-						if(totalTroopsGenerated < 8968.5){
-							if (fleetReinforced < 251.5){
-							  	defend = true;
-							}
-							else{
-								if (turnsPlayed < 246){
-									if (totalTroopsGenerated < 1786.5){
-										defend = true;
-									}
-									else{
-										if (turnsPlayed < 218){
-											attack = true;
-										}
-										else {
-											if (turnsPlayed > 241.5){
-												defend = true;
-											}
-											else {
-												attack = true;
-											}
-										}
-									}
+				//decision tree (after 75 turns??)
+				if (turnsPlayed > 75){
+					if (fleetReinforced <= 3496){
+						if (largestAttack <= 59){
+							if (numFleetReinforced <= 94) {
+								if (turnsPlayed % 2 == 0){
+									defendNearest(rand);
 								}
 								else {
-									defend = true;
+									attackClosestEnemy(rand);
 								}
-							}
-						}
-						else{
-							if (turnsPlayed < 489.5){
-								attack = true;
-							}
-							else{
-								defend = true;
-							}
-						}
-					}
-					else {
-						if (largestAttack < 66.5){
-							defend = true;
-						}
-						else {
-							if (largestReinforcement < 154.5){
-								if (turnsPlayed < 371.5){
-									attack = true;
-								}
-								else{
-									defend = true;
-								}
-							}
-							else{
-								if (largestAttack < 220.5){
-									if (fleetReinforced < 8737.5){
-										if (turnsPlayed < 553){
-											attack = true;
+							} else {
+								if (turnsPlayed <= 278) {
+									if (fleetReinforced <= 988) {
+										if (turnsPlayed % 2 == 0){
+											defendNearest(rand);
 										}
 										else {
-											defend = true;
+											attackClosestEnemy(rand);
+										}
+									} else {
+										if (turnsPlayed % 3 == 0){
+											defendNearest(rand);
+										}
+										else {
+											attackClosestEnemy(rand);
 										}
 									}
-									else{
-										defend = true;
+								} else {
+									if (turnsPlayed % 2 == 0){
+										defendNearest(rand);
+									}
+									else {
+										attackClosestEnemy(rand);
 									}
 								}
-								else{
-									attack = true;
+							}
+						} else {
+							if (turnsPlayed <= 321) {
+								if (turnsPlayed % 3 == 0){
+									defendNearest(rand);
+								}
+								else {
+									attackClosestEnemy(rand);
+								}
+							} else {
+								if (turnsPlayed % 2 == 0){
+									defendNearest(rand);
+								}
+								else {
+									attackClosestEnemy(rand);
 								}
 							}
 						}
-					}
-
-
-					if (attack == true){
-						for (Planet planet : myPlanets){
-							String targetName = planet.closestEnemyPlanet.name;
-							System.out.println("A " + planet.name + " " + targetName);
-						}
-					}
-					if (defend == true){
-						for (Planet planet : myPlanets){
-							String targetName = planet.closestFriendlyPlanet.name;
-							System.out.println("A " + planet.name + " " + targetName);
+					} else {
+						if (turnsPlayed <= 522) {
+							if (turnsPlayed % 3 == 0){
+								defendNearest(rand);
+							}
+							else {
+								attackClosestEnemy(rand);
+							}
+						} else {
+							if (fleetReinforced <= 28612) {
+								if (turnsPlayed % 2 == 0){
+									defendNearest(rand);
+								}
+								else {
+									attackClosestEnemy(rand);
+								}
+							} else {
+								if (turnsPlayed % 3 == 0){
+									defendNearest(rand);
+								}
+								else {
+									attackClosestEnemy(rand);
+								}
+							}
 						}
 					}
 				}
-				/*
-				  	- E will end my turn.
-				  	- you should end each turn (if you don't the game will think you timed-out)
-				  	- after E you should send no more commands to the game
-				 */
 				System.out.println("E");
 			}
 		} catch (Exception e) {
@@ -292,11 +172,10 @@ public class Player {
 
 	}
 
-
 	/**
-	 * This function should be used instead of System.out.print for
-	 * debugging, since the System.out.println is used to send
-	 * commands to the game
+	 * This function should be used instead of System.out.print for debugging, since
+	 * the System.out.println is used to send commands to the game
+	 *
 	 * @param line String you want to log into the log file.
 	 * @throws IOException
 	 */
@@ -312,144 +191,83 @@ public class Player {
 		fileOut.flush();
 	}
 
-
 	/**
-	 * This function should be called at the start of each turn to obtain information about the current state of the game.
-	 * The data received includes details about planets and fleets, categorized by color and type.
+	 * This function should be called at the start of each turn to obtain
+	 * information about the current state of the game. The data received includes
+	 * details about planets and fleets, categorized by color and type.
 	 *
-	 * This version of the function uses dynamic lists to store data about planets and fleets for each color,
-	 * accommodating for an unknown quantity of items. At the end of data collection, these lists are converted into fixed-size
-	 * arrays for consistent integration with other parts of the program.
+	 * This version of the function uses dynamic lists to store data about planets
+	 * and fleets for each color, accommodating for an unknown quantity of items. At
+	 * the end of data collection, these lists are converted into fixed-size arrays
+	 * for consistent integration with other parts of the program.
 	 *
-	 * Feel free to modify and extend this function to enhance the parsing of game data to your needs.
+	 * Feel free to modify and extend this function to enhance the parsing of game
+	 * data to your needs.
 	 *
 	 * @throws NumberFormatException if parsing numeric values from the input fails.
-	 * @throws IOException if an I/O error occurs while reading input.
+	 * @throws IOException           if an I/O error occurs while reading input.
 	 */
 	public static void getGameState() throws NumberFormatException, IOException {
-		BufferedReader stdin = new BufferedReader(
-				new java.io.InputStreamReader(System.in)
-		);
-		/*
-			- this is where we will store the data recieved from the game,
-			- Since we don't know how many planets/fleets each player will
-			have, we are using lists.
-		*/
-
-
-		//reset all my planets attributes for beingattacked after each turn
-		if (myPlanets != null){
-			for (Planet planet : myPlanets) {
-				planet.isBeingAttacked = false;
-				planet.closestFriendlyPlanet = null;
-				planet.closestEnemyPlanet = null;
-			}
-		}
-
-
-
+		BufferedReader stdin = new BufferedReader(new java.io.InputStreamReader(System.in));
 		LinkedList<String> bluePlanetsList = new LinkedList<>();
 		LinkedList<String> cyanPlanetsList = new LinkedList<>();
 		LinkedList<String> greenPlanetsList = new LinkedList<>();
 		LinkedList<String> yellowPlanetsList = new LinkedList<>();
-		LinkedList<String> neutralPlanetsList = new LinkedList<>();
-
+		/*LinkedList<String> neutralPlanetsList = new LinkedList<>();*/
 		LinkedList<String> blueFleetsList = new LinkedList<>();
 		LinkedList<String> cyanFleetsList = new LinkedList<>();
 		LinkedList<String> greenFleetsList = new LinkedList<>();
 		LinkedList<String> yellowFleetsList = new LinkedList<>();
-
+		LinkedList<Planet> allPlanetsList = new LinkedList<>();
 		LinkedList<Planet> myPlanetsList = new LinkedList<>();
-		LinkedList<Planet> nullPlanetsList = new LinkedList<>();
 		LinkedList<Planet> enemyPlanetsList = new LinkedList<>();
+		LinkedList<Planet> neutralPlanetsList = new LinkedList<>();
 
-		/*
-			********************************
-			read the input from the game and
-			parse it (get data from the game)
-			********************************
-			- game is telling us about the state of the game (who ows planets
-			and what fleets/attacks are on their way).
-			- The game will give us data line by line.
-			- When the game only gives us "S", this is a sign
-			that it is our turn and we can start calculating out turn.
-			- NOTE: some things like parsing of fleets(attacks) is not implemented
-			and you should do it yourself
-		*/
+
 		String line = "";
-		/*
-			Loop until the game signals to start playing the turn with "S"
-		*/
 		while (!(line = stdin.readLine()).equals("S")) {
-			/*
-				- save the data we recieve to the log file, so you can see what
-				data is recieved form the game (for debugging)
-			*/
 			logToFile(line);
-
 			String[] tokens = line.split(" ");
 			char firstLetter = line.charAt(0);
-			/*
-			 	U <int> <int> <string>
-				- Universe: Size (x, y) of playing field, and your color
-			*/
 			if (firstLetter == 'U') {
 				universeWidth = Integer.parseInt(tokens[1]);
 				universeHeight = Integer.parseInt(tokens[2]);
 				myColor = tokens[3];
 			}
-			/*
-				P <int> <int> <int> <float> <int> <string>
-				- Planet: Name (number), position x, position y,
-				planet size, army size, planet color (blue, cyan, green, yellow or null for neutral)
-			*/
 			if (firstLetter == 'P') {
-				String plantetName = tokens[1];
+				String planetName = tokens[1];
 				int x = Integer.parseInt(tokens[2]);
 				int y = Integer.parseInt(tokens[3]);
 				float size = Float.parseFloat(tokens[4]);
 				int army = Integer.parseInt(tokens[5]);
 				String color = tokens[6];
 				if (tokens[6].equals("blue")) {
-					bluePlanetsList.add(plantetName);
+					bluePlanetsList.add(planetName);
 				}
 				if (tokens[6].equals("cyan")) {
-					cyanPlanetsList.add(plantetName);
+					cyanPlanetsList.add(planetName);
 				}
 				if (tokens[6].equals("green")) {
-					greenPlanetsList.add(plantetName);
+					greenPlanetsList.add(planetName);
 				}
 				if (tokens[6].equals("yellow")) {
-					yellowPlanetsList.add(plantetName);
+					yellowPlanetsList.add(planetName);
 				}
 				if (tokens[6].equals("null")) {
-					neutralPlanetsList.add(plantetName);
+					Planet planet = new Planet(planetName, army, x, y, color, size);
+					neutralPlanetsList.add(planet);
 				}
-				//if planet belongs to me then add it to myPlanets array
-				if (myColor.equals(color)){
-					Planet planet = new Planet(plantetName,army,x,y,color,size);
+				if (myColor.equals(color)) {
+					Planet planet = new Planet(planetName, army, x, y, color, size);
 					myPlanetsList.add(planet);
 				}
-				//if planet is neutral add it to neutral planets array
-				if(color.equals("null")){
-					Planet planet = new Planet(plantetName,army,x,y,color,size);
-					nullPlanetsList.add(planet);
-				}
-				//if planet is another color then add it to enemyplanets list
-				if(!color.equals("null") && !color.equals(myColor)){
-					Planet planet = new Planet(plantetName,army,x,y,color,size);
+				if (!color.equals(myColor)) {
+					Planet planet = new Planet(planetName, army, x, y, color, size);
 					enemyPlanetsList.add(planet);
 				}
+				Planet planet = new Planet(planetName, army, x, y, color, size);
+				allPlanetsList.add(planet);
 			}
-
-			//Fleet:
-			//- fleet name (number),
-			//- fleet size
-			//- origin planet
-			//- destination planet
-			//- current turn
-			//- number of needed turns
-			//- planet color (owner - may be null for neutral)
 			if (firstLetter == 'F') {
 				int fleetName = Integer.parseInt(tokens[1]);
 				int fleetSize = Integer.parseInt(tokens[2]);
@@ -457,36 +275,13 @@ public class Player {
 				String fleetDestination = tokens[4];
 				int travelTurns = Integer.parseInt(tokens[6]);
 				String fleetPlayerColor = tokens[7];
-				boolean friendDest = false;
-				//if a different colored planet is sending a fleet, check if its sent to one of my planets and set that planets attacked to true
-				if (!fleetPlayerColor.equals(myColor)){
-					for (Planet planet : myPlanets) {
-						if (planet.name.equals(fleetDestination)) {
-							planet.isBeingAttacked = true; //then planet is being attacked
-							break;
-						}
-					}
-				}
-				else{
-					//check if the fleet is no longer targeting one of my planets
-					if (myPlanets != null){
-						for (Planet planet : myPlanets) {
-							if (planet.name.equals(fleetDestination)) {
-								planet.isBeingAttacked = false; //then planet is no longer being attacked
-								break;
-							}
-						}
-					}
-				}
-				//if its my fleet add it to my fleets
-				if (fleetPlayerColor.equals(myColor) && !myFleets.containsKey(fleetName)){
-					myFleets.put(fleetName,fleetSize);
+				if (fleetPlayerColor.equals(myColor) && !myFleets.containsKey(fleetName)) {
+					myFleets.put(fleetName, fleetSize);
 					fleetGenerated += fleetSize;
 					numFleetGenerated++;
-					if (myPlanets != null){
+					if (myPlanets != null) {
 						for (Planet planet : myPlanets) {
-							if (planet.name == fleetDestination) {
-								friendDest = true;
+							if (planet.name.equals(fleetDestination)) {
 								fleetReinforced += fleetSize;
 								numFleetReinforced++;
 								if (fleetSize > largestReinforcement) {
@@ -496,80 +291,149 @@ public class Player {
 						}
 					}
 				}
-				if (fleetPlayerColor.equals(myColor) && friendDest == false){
+				if (fleetPlayerColor.equals(myColor)) {
 					int atk = fleetSize;
-					if (largestAttack < atk){
+					if (largestAttack < atk) {
 						largestAttack = atk;
 					}
 				}
+
 			}
 		}
-		/*
-			- override data from previous turn
-			- convert the lists into fixed size arrays
-		*/
-
-		//find and set a closest friendly planet on each of my planets
-		if (myPlanets != null){
-			double closesetDistance = Double.MAX_VALUE;
-			double distance;
-			for (Planet myPlanet1 : myPlanets){
-				for (Planet myPlanet2 : myPlanets){
-					if (!myPlanet1.name.equals(myPlanet2.name)){
-						distance = calculateDistance(myPlanet1,myPlanet2);
-						if (distance < closesetDistance){
-							myPlanet1.closestFriendlyPlanet = myPlanet2;
-							closesetDistance = distance;
-						}
-					}
-				}
-			}
-		}
-
-
-		//find and set a closest enemy planet on each of my planets
-		if (myPlanets != null && enemyPlanets != null){
-			double closesetDistance = Double.MAX_VALUE;
-			double distance;
-			for (Planet myPlanet : myPlanets){
-				for (Planet enemyPlanet : enemyPlanets){
-						distance = calculateDistance(myPlanet,enemyPlanet);
-						if (distance < closesetDistance){
-							myPlanet.closestEnemyPlanet = enemyPlanet;
-							closesetDistance = distance;
-						}
-				}
-			}
-		}
-
-
 
 
 		bluePlanets = bluePlanetsList.toArray(new String[0]);
 		cyanPlanets = cyanPlanetsList.toArray(new String[0]);
 		greenPlanets = greenPlanetsList.toArray(new String[0]);
 		yellowPlanets = yellowPlanetsList.toArray(new String[0]);
-		neutralPlanets = neutralPlanetsList.toArray(new String[0]);
+		/*neutralPlanets = neutralPlanetsList.toArray(new String[0]);*/
 		blueFleets = blueFleetsList.toArray(new String[0]);
 		cyanFleets = cyanFleetsList.toArray(new String[0]);
 		greenFleets = greenFleetsList.toArray(new String[0]);
 		yellowFleets = yellowFleetsList.toArray(new String[0]);
 
 		myPlanets = myPlanetsList.toArray(new Planet[0]);
-		nullPlanets = nullPlanetsList.toArray(new Planet[0]);
 		enemyPlanets = enemyPlanetsList.toArray(new Planet[0]);
-		numFriendlyPlanets = myPlanets.length;
+		allPlanets = allPlanetsList.toArray(new Planet[0]);
+		neutralPlanets = neutralPlanetsList.toArray(new Planet[0]);
+	}
+	public static void attack(Random rand){
+		if (myPlanets.length > 0 && enemyPlanets.length > 0) {
+			for (Planet myPlanet : myPlanets) {
+				Planet enemyPlanet = enemyPlanets[rand.nextInt(enemyPlanets.length)];
+				System.out.println("A " + myPlanet.name + " " + enemyPlanet.name);
+			}
+		}
+	}
+	public static void defend(Random rand) {
+		if (myPlanets.length > 0) {
+			for (Planet myPlanet : myPlanets) {
+				// Find nearby friendly planets that need reinforcement
+				for (Planet friendlyPlanet : myPlanets) {
+					if (friendlyPlanet != myPlanet) { // Skip the current planet
+						// Send reinforcement from current planet to a nearby friendly planet
+						System.out.println("A " + myPlanet.name + " " + friendlyPlanet.name);
+						break; // Only reinforce one nearby friendly planet per turn
+					}
+				}
+            }
+		}
 	}
 	public static double calculateDistance(Planet planet1, Planet planet2) {
 		int deltaX = planet1.x - planet2.x;
 		int deltaY = planet1.y - planet2.y;
 		return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 	}
-	public static void updateTroops(){
-		if (myPlanets != null){
+	public static void findClosestNeutral(){
+		if (myPlanets != null && neutralPlanets != null){
+			double closesetDistance = Double.MAX_VALUE;
+			double distance;
+			for (Planet myPlanet : myPlanets){
+				for (Planet enemyPlanet : neutralPlanets){
+					distance = calculateDistance(myPlanet,enemyPlanet);
+					if (distance < closesetDistance){
+						myPlanet.closestNeutral = enemyPlanet;
+						closesetDistance = distance;
+					}
+				}
+			}
+		}
+	}
+	public static void findClosestEnemy(){
+		if (myPlanets != null && enemyPlanets != null){
+			double closesetDistance = Double.MAX_VALUE;
+			double distance;
+			for (Planet myPlanet : myPlanets){
+				for (Planet enemyPlanet : enemyPlanets){
+					distance = calculateDistance(myPlanet,enemyPlanet);
+					if (distance < closesetDistance){
+						myPlanet.closestEnemyPlanet = enemyPlanet;
+						closesetDistance = distance;
+					}
+				}
+			}
+		}
+	}
+	public static void findClosestFriend(){
+		if (myPlanets != null && myPlanets.length >= 2){
+			double closesetDistance = Double.MAX_VALUE;
+			double distance;
+			for (Planet myPlanet1 : myPlanets){
+				for (Planet myPlanet2 : myPlanets){
+					if (!myPlanet1.name.equals(myPlanet2)){
+						distance = calculateDistance(myPlanet1,myPlanet2);
+						if (distance < closesetDistance){
+							myPlanet1.closestFriend = myPlanet2;
+							closesetDistance = distance;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public static void attackClosestNeutral(Random rand){
+		if(myPlanets.length > 0 && enemyPlanets.length > 0 && neutralPlanets.length > 0){
 			for (Planet planet : myPlanets){
-				planet.troopsCount();
-				totalTroopsGenerated += planet.diff;
+				try{
+					Planet target = planet.closestNeutral;
+					System.out.println("A " + planet.name + " " + target.name);
+				}
+				//if error then just attack something
+				catch (Exception e){
+					Planet enemyPlanet = enemyPlanets[rand.nextInt(enemyPlanets.length)];
+					System.out.println("A " + planet.name + " " + enemyPlanet.name);
+				}
+			}
+		}
+	}
+	public static void attackClosestEnemy(Random rand){
+		if(myPlanets.length > 0 && enemyPlanets.length > 0){
+			for (Planet planet : myPlanets){
+				try{
+					Planet target = planet.closestEnemyPlanet;
+					System.out.println("A " + planet.name + " " + target.name);
+				}
+				//if error then just attack something
+				catch (Exception e){
+					Planet enemyPlanet = enemyPlanets[rand.nextInt(enemyPlanets.length)];
+					System.out.println("A " + planet.name + " " + enemyPlanet.name);
+				}
+			}
+		}
+	}
+	public static void defendNearest(Random rand){
+		if(myPlanets.length > 0 && enemyPlanets.length > 0){
+			for (Planet planet : myPlanets){
+				try{
+					Planet target = planet.closestFriend;
+					System.out.println("A " + planet.name + " " + target.name);
+				}
+				//if error then just attack something
+				catch (Exception e){
+					Planet enemyPlanet = enemyPlanets[rand.nextInt(enemyPlanets.length)];
+					System.out.println("A " + planet.name + " " + enemyPlanet.name);
+				}
 			}
 		}
 	}
