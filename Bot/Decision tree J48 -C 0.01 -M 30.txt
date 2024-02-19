@@ -1,0 +1,68 @@
+=== Run information ===
+
+Scheme:       weka.classifiers.trees.J48 -C 0.01 -M 30
+Relation:     stats-weka.filters.unsupervised.attribute.Remove-R3-4,7-13,16
+Instances:    2000
+Attributes:   6
+              turnsPlayed
+              survive
+              fleetReinforced
+              largestAttack
+              numFleetReinforced
+              numFleetGenerated
+Test mode:    10-fold cross-validation
+
+=== Classifier model (full training set) ===
+
+J48 pruned tree
+------------------
+
+fleetReinforced <= 3496
+|   largestAttack <= 59
+|   |   numFleetReinforced <= 94: false (844.0/16.0)
+|   |   numFleetReinforced > 94
+|   |   |   turnsPlayed <= 278
+|   |   |   |   fleetReinforced <= 988: false (35.0/11.0)
+|   |   |   |   fleetReinforced > 988: true (31.0/6.0)
+|   |   |   turnsPlayed > 278: false (215.0/2.0)
+|   largestAttack > 59
+|   |   turnsPlayed <= 321: true (40.0/9.0)
+|   |   turnsPlayed > 321: false (54.0/1.0)
+fleetReinforced > 3496
+|   turnsPlayed <= 522: true (617.0/28.0)
+|   turnsPlayed > 522
+|   |   fleetReinforced <= 28612: false (70.0/4.0)
+|   |   fleetReinforced > 28612: true (94.0/8.0)
+
+Number of Leaves  : 	9
+
+Size of the tree : 	17
+
+
+Time taken to build model: 0.1 seconds
+
+=== Stratified cross-validation ===
+=== Summary ===
+
+Correctly Classified Instances        1885               94.25   %
+Incorrectly Classified Instances       115                5.75   %
+Kappa statistic                          0.8782
+Mean absolute error                      0.0954
+Root mean squared error                  0.2308
+Relative absolute error                 20.2043 %
+Root relative squared error             47.4814 %
+Total Number of Instances             2000     
+
+=== Detailed Accuracy By Class ===
+
+                 TP Rate  FP Rate  Precision  Recall   F-Measure  MCC      ROC Area  PRC Area  Class
+                 0.924    0.046    0.925      0.924    0.925      0.878    0.951     0.924     true
+                 0.954    0.076    0.953      0.954    0.953      0.878    0.951     0.955     false
+Weighted Avg.    0.943    0.064    0.942      0.943    0.942      0.878    0.951     0.943     
+
+=== Confusion Matrix ===
+
+    a    b   <-- classified as
+  707   58 |    a = true
+   57 1178 |    b = false
+
