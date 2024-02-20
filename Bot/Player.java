@@ -28,18 +28,15 @@ class Planet {
 
 public class Player {
 	static BufferedWriter fileOut = null;
-
 	// GAME DATA
 	public static int universeWidth;
 	public static int universeHeight;
 	public static String myColor;
-
+	public static String teammateColor;
 	public static String[] bluePlanets;
 	public static String[] cyanPlanets;
 	public static String[] greenPlanets;
 	public static String[] yellowPlanets;
-/*	public static String[] neutralPlanets;*/
-
 	public static String[] blueFleets;
 	public static String[] cyanFleets;
 	public static String[] greenFleets;
@@ -50,6 +47,7 @@ public class Player {
 	public static Planet[] myPlanets;
 	public static Planet[] enemyPlanets;
 	public static Planet[] neutralPlanets;
+	public static Planet[] teamPlanets; //includes my and my teammates planets
 	public static HashMap<Integer, Integer> myFleets = new HashMap<>(); //<Name, Size>
 	// attributes from dataset
 	public static int turnsPlayed = 0;
@@ -74,14 +72,11 @@ public class Player {
 				findClosestFriend();
 
 				//first 30 turns attack closest neutrals
-				if (turnsPlayed <= 75){
+				if (turnsPlayed <= 50){
 					attackClosestNeutral(rand);
 				}
-
-
-
-				//decision tree (after 75 turns??)
-				if (turnsPlayed > 75){
+				//decision tree
+				if (turnsPlayed > 50){
 					if (fleetReinforced <= 3496){
 						if (largestAttack <= 59){
 							if (numFleetReinforced <= 94) {
@@ -213,15 +208,12 @@ public class Player {
 		LinkedList<String> cyanPlanetsList = new LinkedList<>();
 		LinkedList<String> greenPlanetsList = new LinkedList<>();
 		LinkedList<String> yellowPlanetsList = new LinkedList<>();
-		/*LinkedList<String> neutralPlanetsList = new LinkedList<>();*/
-		LinkedList<String> blueFleetsList = new LinkedList<>();
-		LinkedList<String> cyanFleetsList = new LinkedList<>();
-		LinkedList<String> greenFleetsList = new LinkedList<>();
-		LinkedList<String> yellowFleetsList = new LinkedList<>();
+
 		LinkedList<Planet> allPlanetsList = new LinkedList<>();
 		LinkedList<Planet> myPlanetsList = new LinkedList<>();
 		LinkedList<Planet> enemyPlanetsList = new LinkedList<>();
 		LinkedList<Planet> neutralPlanetsList = new LinkedList<>();
+		LinkedList<Planet> teamPlanetsList = new LinkedList<>();
 
 
 		String line = "";
@@ -233,6 +225,7 @@ public class Player {
 				universeWidth = Integer.parseInt(tokens[1]);
 				universeHeight = Integer.parseInt(tokens[2]);
 				myColor = tokens[3];
+				teammateColor = teammate();
 			}
 			if (firstLetter == 'P') {
 				String planetName = tokens[1];
@@ -257,11 +250,17 @@ public class Player {
 					Planet planet = new Planet(planetName, army, x, y, color, size);
 					neutralPlanetsList.add(planet);
 				}
+				//only my planets
 				if (myColor.equals(color)) {
 					Planet planet = new Planet(planetName, army, x, y, color, size);
 					myPlanetsList.add(planet);
 				}
-				if (!color.equals(myColor)) {
+				//my and my teammates planets
+				if (color.equals(teammateColor) || color.equals(myColor)){
+					Planet planet = new Planet(planetName, army, x, y, color, size);
+					teamPlanetsList.add(planet);
+				}
+				if (!color.equals(myColor) || !color.equals(teammateColor)) {
 					Planet planet = new Planet(planetName, army, x, y, color, size);
 					enemyPlanetsList.add(planet);
 				}
@@ -306,38 +305,12 @@ public class Player {
 		cyanPlanets = cyanPlanetsList.toArray(new String[0]);
 		greenPlanets = greenPlanetsList.toArray(new String[0]);
 		yellowPlanets = yellowPlanetsList.toArray(new String[0]);
-		/*neutralPlanets = neutralPlanetsList.toArray(new String[0]);*/
-		blueFleets = blueFleetsList.toArray(new String[0]);
-		cyanFleets = cyanFleetsList.toArray(new String[0]);
-		greenFleets = greenFleetsList.toArray(new String[0]);
-		yellowFleets = yellowFleetsList.toArray(new String[0]);
 
 		myPlanets = myPlanetsList.toArray(new Planet[0]);
 		enemyPlanets = enemyPlanetsList.toArray(new Planet[0]);
 		allPlanets = allPlanetsList.toArray(new Planet[0]);
 		neutralPlanets = neutralPlanetsList.toArray(new Planet[0]);
-	}
-	public static void attack(Random rand){
-		if (myPlanets.length > 0 && enemyPlanets.length > 0) {
-			for (Planet myPlanet : myPlanets) {
-				Planet enemyPlanet = enemyPlanets[rand.nextInt(enemyPlanets.length)];
-				System.out.println("A " + myPlanet.name + " " + enemyPlanet.name);
-			}
-		}
-	}
-	public static void defend(Random rand) {
-		if (myPlanets.length > 0) {
-			for (Planet myPlanet : myPlanets) {
-				// Find nearby friendly planets that need reinforcement
-				for (Planet friendlyPlanet : myPlanets) {
-					if (friendlyPlanet != myPlanet) { // Skip the current planet
-						// Send reinforcement from current planet to a nearby friendly planet
-						System.out.println("A " + myPlanet.name + " " + friendlyPlanet.name);
-						break; // Only reinforce one nearby friendly planet per turn
-					}
-				}
-            }
-		}
+		teamPlanets = teamPlanetsList.toArray(new Planet[0]);
 	}
 	public static double calculateDistance(Planet planet1, Planet planet2) {
 		int deltaX = planet1.x - planet2.x;
@@ -379,7 +352,7 @@ public class Player {
 			double closesetDistance = Double.MAX_VALUE;
 			double distance;
 			for (Planet myPlanet1 : myPlanets){
-				for (Planet myPlanet2 : myPlanets){
+				for (Planet myPlanet2 : teamPlanets){
 					if (!myPlanet1.name.equals(myPlanet2)){
 						distance = calculateDistance(myPlanet1,myPlanet2);
 						if (distance < closesetDistance){
@@ -435,6 +408,23 @@ public class Player {
 					System.out.println("A " + planet.name + " " + enemyPlanet.name);
 				}
 			}
+		}
+	}
+	public static String teammate(){
+		if (myColor.equals("blue")){
+			return "cyan";
+		}
+		if(myColor.equals("cyan")){
+			return "blue";
+		}
+		if ((myColor.equals("green"))){
+			return "yellow";
+		}
+		if (myColor.equals("yellow")){
+			return "green";
+		}
+		else {
+			return null;
 		}
 	}
 }
