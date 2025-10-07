@@ -29,9 +29,3 @@ The main implementation is in `Player.java`, which:
 * Parses game state input each turn.
 * Tracks planets, fleets, and performance statistics.
 * Executes actions according to the decision tree outcomes.
-
-All redundant `try/catch` blocks were removed for consistent, deterministic behavior.
-
-## Repository
-
-Full source code, dataset, and parser are available in this repository.
